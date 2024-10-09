@@ -14,6 +14,7 @@ use async_openai::{
     },
     Client,
 };
+use async_openai::types::{ChatCompletionNamedToolChoice, ChatCompletionToolChoiceOption, FunctionName};
 use async_trait::async_trait;
 use futures::{Stream, StreamExt};
 
@@ -321,7 +322,11 @@ impl<C: Config> OpenAI<C> {
             match behavior {
                 FunctionCallBehavior::Auto => request_builder.tool_choice("auto"),
                 FunctionCallBehavior::None => request_builder.tool_choice("none"),
-                FunctionCallBehavior::Named(name) => request_builder.tool_choice(name.as_str()),
+                FunctionCallBehavior::Required => request_builder.tool_choice("required"),
+                FunctionCallBehavior::Named(name) => request_builder.tool_choice(ChatCompletionToolChoiceOption::Named(ChatCompletionNamedToolChoice{
+                    r#type: ChatCompletionToolType::Function,
+                    function: FunctionName { name: name.clone() },
+                })),
             };
         }
         request_builder.messages(messages);

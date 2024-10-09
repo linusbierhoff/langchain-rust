@@ -9,6 +9,7 @@ use crate::tools::Tool;
 pub enum FunctionCallBehavior {
     None,
     Auto,
+    Required,
     Named(String),
 }
 
