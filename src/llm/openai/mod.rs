@@ -4,13 +4,7 @@ pub use async_openai::config::{AzureConfig, Config, OpenAIConfig};
 use async_openai::{
     error::OpenAIError,
     types::{
-        ChatChoiceStream, ChatCompletionMessageToolCall, ChatCompletionRequestAssistantMessageArgs,
-        ChatCompletionRequestMessage, ChatCompletionRequestMessageContentPartImageArgs,
-        ChatCompletionRequestSystemMessageArgs, ChatCompletionRequestToolMessageArgs,
-        ChatCompletionRequestUserMessageArgs, ChatCompletionRequestUserMessageContent,
-        ChatCompletionRequestUserMessageContentPart, ChatCompletionStreamOptions,
-        ChatCompletionToolArgs, ChatCompletionToolType, CreateChatCompletionRequest,
-        CreateChatCompletionRequestArgs, FunctionObjectArgs,
+        ChatChoiceStream, ChatCompletionMessageToolCall, ChatCompletionRequestAssistantMessageArgs, ChatCompletionRequestMessage, ChatCompletionRequestMessageContentPartImageArgs, ChatCompletionRequestSystemMessageArgs, ChatCompletionRequestToolMessageArgs, ChatCompletionRequestUserMessageArgs, ChatCompletionRequestUserMessageContent, ChatCompletionRequestUserMessageContentPart, ChatCompletionStreamOptions, ChatCompletionToolArgs, ChatCompletionToolChoiceOption, ChatCompletionToolType, CreateChatCompletionRequest, CreateChatCompletionRequestArgs, FunctionObjectArgs
     },
     Client,
 };
@@ -322,6 +316,7 @@ impl<C: Config> OpenAI<C> {
                 FunctionCallBehavior::Auto => request_builder.tool_choice("auto"),
                 FunctionCallBehavior::None => request_builder.tool_choice("none"),
                 FunctionCallBehavior::Named(name) => request_builder.tool_choice(name.as_str()),
+                FunctionCallBehavior::NamedLlama(name) => request_builder.tool_choice(ChatCompletionToolChoiceOption::NamedLlama(name.clone())),
             };
         }
         request_builder.messages(messages);

@@ -10,6 +10,7 @@ pub enum FunctionCallBehavior {
     None,
     Auto,
     Named(String),
+    NamedLlama(String),
 }
 
 #[derive(Clone, Debug)]
