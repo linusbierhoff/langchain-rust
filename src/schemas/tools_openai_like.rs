@@ -1,9 +1,12 @@
-use std::ops::Deref;
-
+use crate::schemas::convert::{OpenAIFromLangchain, TryOpenAiFromLangchain};
+use crate::tools::Tool;
+use async_openai::types::{
+    ChatCompletionNamedToolChoice, ChatCompletionTool, ChatCompletionToolArgs,
+    ChatCompletionToolChoiceOption, ChatCompletionToolType, FunctionName, FunctionObjectArgs,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-
-use crate::tools::Tool;
+use std::ops::Deref;
 
 #[derive(Clone, Debug)]
 pub enum FunctionCallBehavior {
@@ -11,6 +14,24 @@ pub enum FunctionCallBehavior {
     Auto,
     Named(String),
     NamedLlama(String),
+}
+
+impl OpenAIFromLangchain<FunctionCallBehavior> for ChatCompletionToolChoiceOption {
+    fn from_langchain(langchain: FunctionCallBehavior) -> Self {
+        match langchain {
+            FunctionCallBehavior::Auto => ChatCompletionToolChoiceOption::Auto,
+            FunctionCallBehavior::None => ChatCompletionToolChoiceOption::None,
+            FunctionCallBehavior::Named(name) => {
+                ChatCompletionToolChoiceOption::Named(ChatCompletionNamedToolChoice {
+                    r#type: ChatCompletionToolType::Function,
+                    function: FunctionName {
+                        name: name.to_owned(),
+                    },
+                })
+            }
+            FunctionCallBehavior::NamedLlama(name) => ChatCompletionToolChoiceOption::NamedLlama(name.clone())
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -39,6 +60,22 @@ impl FunctionDefinition {
             description: tool.description(),
             parameters: tool.parameters(),
         }
+    }
+}
+
+impl TryOpenAiFromLangchain<FunctionDefinition> for ChatCompletionTool {
+    type Error = async_openai::error::OpenAIError;
+    fn try_from_langchain(langchain: FunctionDefinition) -> Result<Self, Self::Error> {
+        let tool = FunctionObjectArgs::default()
+            .name(langchain.name)
+            .description(langchain.description)
+            .parameters(langchain.parameters)
+            .build()?;
+
+        ChatCompletionToolArgs::default()
+            .r#type(ChatCompletionToolType::Function)
+            .function(tool)
+            .build()
     }
 }
 

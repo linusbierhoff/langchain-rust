@@ -36,7 +36,7 @@ This is the Rust language implementation of [LangChain](https://github.com/langc
   - [x] [OpenSearch](https://github.com/Abraxas-365/langchain-rust/blob/main/examples/vector_store_opensearch.rs)
   - [x] [Postgres](https://github.com/Abraxas-365/langchain-rust/blob/main/examples/vector_store_postgres.rs)
   - [x] [Qdrant](https://github.com/Abraxas-365/langchain-rust/blob/main/examples/vector_store_qdrant.rs)
-  - [x] [Sqlite](https://github.com/Abraxas-365/langchain-rust/blob/main/examples/vector_store_sqlite.rs)
+  - [x] [Sqlite](https://github.com/Abraxas-365/langchain-rust/blob/main/examples/vector_store_sqlite_vss.rs)
   - [x] [SurrealDB](https://github.com/Abraxas-365/langchain-rust/blob/main/examples/vector_store_surrealdb/src/main.rs)
 
 - Chain
@@ -135,6 +135,27 @@ This is the Rust language implementation of [LangChain](https://github.com/langc
     }
     ```
 
+  - [x] HTML To Markdown
+
+    ```rust
+    use futures_util::StreamExt;
+    use url::Url;
+
+    async fn main() {
+        let path = "./src/document_loaders/test_data/example.html";
+        let html_to_markdown_loader = HtmlToMarkdownLoader::from_path(path, Url::parse("https://example.com/").unwrap(), HtmlToMarkdownOptions::default().with_skip_tags(vec!["figure".to_string()]))
+            .expect("Failed to create html to markdown loader");
+
+        let documents = html_to_markdown_loader
+            .load()
+            .await
+            .unwrap()
+            .map(|x| x.unwrap())
+            .collect::<Vec<_>>()
+            .await;
+    }
+    ```
+
   - [x] CSV
 
     ```rust
@@ -219,11 +240,22 @@ cargo add langchain-rust
 
 #### With Sqlite
 
-```bash
-cargo add langchain-rust --features sqlite
-```
+##### sqlite-vss
 
 Download additional sqlite_vss libraries from <https://github.com/asg017/sqlite-vss>
+
+```bash
+cargo add langchain-rust --features sqlite-vss
+```
+
+##### sqlite-vec
+
+Download additional sqlite_vec libraries from <https://github.com/asg017/sqlite-vec>
+
+```bash
+cargo add langchain-rust --features sqlite-vec
+```
+
 
 #### With Postgres
 
