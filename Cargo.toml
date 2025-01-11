@@ -49,7 +49,7 @@ thiserror = "2.0.0"
 futures-util = "0.3.30"
 async-stream = "0.3.5"
 tokio-stream = "0.1.15"
-secrecy = "0.8.0"
+secrecy = {version =  "0.10.3", features = ["serde"]}
 readability = "0.3.0"
 htmd = { version = "0.1", optional = true }
 url = "2.5.0"
