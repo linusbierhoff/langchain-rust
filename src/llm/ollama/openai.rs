@@ -65,6 +65,8 @@ impl Default for OllamaConfig {
         Self {
             api_base: OLLAMA_API_BASE.to_string(),
             api_key: SecretString::new(Box::from("ollama")),
+            api_key: SecretString::from("ollama".to_string()),
+
         }
     }
 }
