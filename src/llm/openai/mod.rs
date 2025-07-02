@@ -2,7 +2,9 @@ use std::pin::Pin;
 
 pub use async_openai::config::{AzureConfig, Config, OpenAIConfig};
 
-use async_openai::types::{ChatCompletionResponseMessage, ChatCompletionToolChoiceOption, ResponseFormat};
+use async_openai::types::{
+    ChatCompletionResponseMessage, ChatCompletionToolChoiceOption, ResponseFormat,
+};
 use async_openai::{
     error::OpenAIError,
     types::{
@@ -100,11 +102,9 @@ impl<C: Config + Send + Sync + 'static> LLM for OpenAI<C> {
         let client = Client::with_config(self.config.clone());
         let request = self.generate_request(prompt, self.options.streaming_func.is_some())?;
         match &self.options.streaming_func {
-            Some(func) => {             
+            Some(func) => {
                 let mut stream = match request {
-                    RequestType::OpenAI(request) => {
-                        client.chat().create_stream(request).await?
-                    },
+                    RequestType::OpenAI(request) => client.chat().create_stream(request).await?,
                     RequestType::Custom(request) => {
                         client.chat().create_stream_byot(request).await?
                     }
@@ -143,12 +143,8 @@ impl<C: Config + Send + Sync + 'static> LLM for OpenAI<C> {
             }
             None => {
                 let response = match request {
-                    RequestType::OpenAI(request) => {
-                        client.chat().create(request).await?
-                    },
-                    RequestType::Custom(request) => {
-                        client.chat().create_byot(request).await?
-                    }
+                    RequestType::OpenAI(request) => client.chat().create(request).await?,
+                    RequestType::Custom(request) => client.chat().create_byot(request).await?,
                 };
                 let mut generate_result = GenerateResult::default();
 
@@ -189,12 +185,8 @@ impl<C: Config + Send + Sync + 'static> LLM for OpenAI<C> {
         let request = self.generate_request(messages, true)?;
 
         let original_stream = match request {
-            RequestType::OpenAI(request) => {
-                client.chat().create_stream(request).await?
-            },
-            RequestType::Custom(request) => {
-                client.chat().create_stream_byot(request).await?
-            }
+            RequestType::OpenAI(request) => client.chat().create_stream(request).await?,
+            RequestType::Custom(request) => client.chat().create_stream_byot(request).await?,
         };
 
         let new_stream = original_stream.map(|result| match result {
@@ -344,8 +336,7 @@ impl<C: Config> OpenAI<C> {
         }
 
         request_builder.messages(messages);
-        
-        
+
         let request = if let Some(extra_body) = &self.options.extra_body {
             log::debug!("Extra body: {:?}", extra_body);
             let helper = CustomRequestHelper {
@@ -368,7 +359,7 @@ impl<C: Config> OpenAI<C> {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 enum RequestType {
     Custom(Value),
-    OpenAI(CreateChatCompletionRequest)
+    OpenAI(CreateChatCompletionRequest),
 }
 
 #[derive(Clone, Serialize)]
@@ -381,7 +372,7 @@ struct CustomRequestHelper {
 #[derive(Clone, Deserialize)]
 enum ResponsType {
     Custom(Value),
-    OpenAI(ChatCompletionResponseMessage)
+    OpenAI(ChatCompletionResponseMessage),
 }
 #[cfg(test)]
 mod tests {

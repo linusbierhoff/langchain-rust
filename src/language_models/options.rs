@@ -28,7 +28,7 @@ pub struct CallOptions {
     pub function_call_behavior: Option<FunctionCallBehavior>,
     pub response_format: Option<ResponseFormat>,
     pub stream_usage: Option<bool>,
-    pub extra_body: Option<serde_json::Value>
+    pub extra_body: Option<serde_json::Value>,
 }
 
 impl Default for CallOptions {
