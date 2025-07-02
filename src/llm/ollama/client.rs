@@ -5,6 +5,7 @@ use crate::{
 use async_trait::async_trait;
 use futures::Stream;
 use ollama_rs::generation::images::Image;
+use ollama_rs::generation::tools::{ToolCall, ToolCallFunction};
 pub use ollama_rs::{
     error::OllamaError,
     generation::{
@@ -15,7 +16,6 @@ pub use ollama_rs::{
 };
 use std::pin::Pin;
 use std::sync::Arc;
-use ollama_rs::generation::tools::{ToolCall, ToolCallFunction};
 use tokio_stream::StreamExt;
 
 #[derive(Debug, Clone)]
@@ -73,7 +73,7 @@ impl From<&Message> for ChatMessage {
             content: message.content.clone(),
             images,
             role: message.message_type.clone().into(),
-            tool_calls: vec![]
+            tool_calls: vec![],
         }
     }
 }
@@ -130,7 +130,7 @@ impl LLM for Ollama {
                 Ok(StreamData::new(
                     serde_json::to_value(data).unwrap_or_default(),
                     None,
-                    content
+                    content,
                 ))
             }
             Err(_) => Err(OllamaError::Other("Stream error".to_string()).into()),
