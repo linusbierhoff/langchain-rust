@@ -15,6 +15,7 @@ pub use ollama_rs::{
 };
 use std::pin::Pin;
 use std::sync::Arc;
+use ollama_rs::generation::tools::{ToolCall, ToolCallFunction};
 use tokio_stream::StreamExt;
 
 #[derive(Debug, Clone)]
@@ -72,6 +73,7 @@ impl From<&Message> for ChatMessage {
             content: message.content.clone(),
             images,
             role: message.message_type.clone().into(),
+            tool_calls: vec![]
         }
     }
 }
@@ -100,10 +102,7 @@ impl LLM for Ollama {
         let request = self.generate_request(messages);
         let result = self.client.send_chat_messages(request).await?;
 
-        let generation = match result.message {
-            Some(message) => message.content,
-            None => return Err(OllamaError::from("No message in response".to_string()).into()),
-        };
+        let generation = result.message.content;
 
         let tokens = result.final_data.map(|final_data| {
             let prompt_tokens = final_data.prompt_eval_count as u32;
@@ -126,18 +125,15 @@ impl LLM for Ollama {
         let result = self.client.send_chat_messages_stream(request).await?;
 
         let stream = result.map(|data| match data {
-            Ok(data) => match data.message.clone() {
-                Some(message) => Ok(StreamData::new(
+            Ok(data) => {
+                let content = data.message.content.clone();
+                Ok(StreamData::new(
                     serde_json::to_value(data).unwrap_or_default(),
                     None,
-                    message.content,
-                )),
-                // TODO: no need to return error, see https://github.com/Abraxas-365/langchain-rust/issues/140
-                None => Err(LLMError::ContentNotFound(
-                    "No message in response".to_string(),
-                )),
-            },
-            Err(_) => Err(OllamaError::from("Stream error".to_string()).into()),
+                    content
+                ))
+            }
+            Err(_) => Err(OllamaError::Other("Stream error".to_string()).into()),
         });
 
         Ok(Box::pin(stream))
